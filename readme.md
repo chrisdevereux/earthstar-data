@@ -5,15 +5,13 @@ Data structures for earthstar. Makes it easier to:
 - Store structured data with granular documents so that they can be concurrently edited from multiple devices.
 - Model relationships easily
 - Easily encode and decode js types to text-based representations and binary attachments
-- Map values onto the correct typescript type
+- Represent values stored in earthstar using the correct Typescript type (if you like Typescript)
 
-You might think of it as fulfilling the same role as that an ORM does in a relational database.
+You might think of it as roughly fulfilling the role as that an ORM does in a relational database. Or at least in the sense of providing a higher-level wrapper that makes it easy to do slightly more complex things with data.
 
 ## Usage
 
-Docs are mostly in the code for now.
-
-The overall idea is that we define a schema for types using a similar API to validation APIs like [yup] and then use that to read and write to the replica rather than the replica directly.
+The overall idea is that we define a schema for types using a similar API to validation APIs like [yup](https://github.com/jquense/yup) and then use that to read and write to the replica rather than the replica directly.
 
 Let's try it out by modelling a `Post` type:
 
@@ -68,49 +66,55 @@ myPost$.subscribe((myPost) => {
 
 ## Internals
 
-Types are defined by implementing two methods on the abstract `EsType` class. There are a bunch already built in, but it's worth understanding how they work even if you don't need to write your own. A type needs to implement two methods:
+Types are defined by implementing two methods on the abstract `EsType` class. There are a bunch of useful types already built in, but it's worth understanding how they work even if you don't need to write your own. A type needs to implement two methods:
 
 ```typescript
-reduce({
-  // Document we're reading
-  doc: DocEs5
+class MyCustomType {
+  reduce({
+    // Document we're reading
+    doc: DocEs5
 
-  // Subpath components from the requested path to `doc`
-  pathComponents: string[]
+    // Subpath components from the requested path to `doc`
+    pathComponents: string[]
 
-  // Replica we're reading from
-  replica: Replica
+    // Replica we're reading from
+    replica: Replica
 
-  // Previous value returned from reduce() or undefined if this is the first invocation
-  prev: T | undefined
-}): T | undefined | Promise<T | undefined>;
+    // Previous value returned from reduce() or undefined if this is the first invocation
+    prev: T | undefined
+  }): T | undefined | Promise<T | undefined> {
+    ...
+  }
 
-write: ({
-  // Replica we're writing to
-  replica: Replica,
+  write({
+    // Replica we're writing to
+    replica: Replica,
 
-  // Author identity used to write documents
-  author: AuthorKeypair,
+    // Author identity used to write documents
+    author: AuthorKeypair,
 
-  // Path of the current written value
-  path: string
+    // Path of the current written value
+    path: string
 
-  // Data to be written to the current path
-  data: T | undefined
-}): Promise<void>;
+    // Data to be written to the current path
+    data: T | undefined
+  }): Promise<void> {
+    ...
+  }
+}
 ```
 
-You can extend the `Atom` class for simple atomic types that map one-one onto a document's text content.
+You can extend the `Atom` class for simple atomic types that map one-one onto a document's text content. See the source for examples.
 
 ### reduce()
 
-When you call `Post.read()` in the example above, the replica is queried for both the requested path and all known subpaths. These are fed one-by-one fed into the `reduce()` method along with the previous return value from. Each invocation progressively builds up the full object from the data in each document. If you've ever used redux, it's a little like how they work in that.
+When you call `Post.read()` in the example above, the replica is queried for both the requested path and all subpaths. These are fed one-by-one fed into the `reduce()` method along with its previous return value (starting with null). Each invocation progressively builds up the full object from the data in each document. If you've ever used redux or Elm, you might be familiar with this sort of approach.
 
-For a simple, atomic type that doesn't have much of an internal structure, the reduce method will be very simple - it will simply grab some text from a document (or binary data from its attachment), possibly doing a conversion on the text and return it, ignoring the previous value.
+For a simple, atomic type that doesn't have much of an internal structure, the reduce method will be very simple. It will simply grab some text from a document (or binary data from its attachment), possibly doing a conversion on the text and return it, ignoring the previous value.
 
-For a more complex type, the reducer will recursively call into inner types until it finds the type related to the current document and merge the results together with the last known value to add or remove data from it.
+For a more complex type, the reducer will recursively call into inner types to merge data extracted from the document from the last known value to add or remove data from it.
 
-Using a reducer here means that we can fetch all the documents from the replica in one go and also listen for more granular changes to data than we would have otherwise, which makes observing changes a bit more efficient. It also potentially allows us to do more fancy things if we want, like building up a persistent secondary index by listening to changes from the main replica.
+Using a reducer here means that we can fetch all the documents from the replica in one go and also listen for more granular changes to data than we would have otherwise, which makes observing documents (or big collections of data) for changes a bit more efficient. It also potentially allows us to do more fancy things if we want, like building up a persistent secondary index by listening to changes from the main replica.
 
 ### write()
 
