@@ -9,6 +9,12 @@ Data structures for earthstar. Makes it easier to:
 
 You might think of it as roughly fulfilling the role as that an ORM does in a relational database. Or at least in the sense of providing a higher-level wrapper that makes it easy to do slightly more complex things with data.
 
+## Install
+
+```bash
+npm install earthstar-data
+```
+
 ## Usage
 
 The overall idea is that we define a schema for types using a similar API to validation APIs like [yup](https://github.com/jquense/yup) and then use that to read and write to the replica rather than the replica directly.

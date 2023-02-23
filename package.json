@@ -2,6 +2,14 @@
   "name": "earthstar-data",
   "version": "0.1.0",
   "description": "Data structures for earthstar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrisdevereux/earthstar-data"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
