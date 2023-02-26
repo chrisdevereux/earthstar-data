@@ -17,6 +17,9 @@
       "require": "./dist/index.js"
     }
   },
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsup --dts --format esm,cjs",
     "test": "vitest"
