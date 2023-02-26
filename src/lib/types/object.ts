@@ -1,5 +1,5 @@
-import { EsType, ReduceProps, TypeOf, WriteProps } from "./types"
-import { isEmptyObject, NullableValues, wipeDocsUnderPath } from "./util"
+import { EsType, ReduceProps, TypeOf, WriteProps } from "../type"
+import { isEmptyObject, NullableValues, wipeDocsUnderPath } from "../util"
 
 type ShapeDef = Record<string, EsType | undefined>
 type WrittenProps<T> = Partial<NullableValues<T>>

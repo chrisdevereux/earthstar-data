@@ -1,6 +1,6 @@
 import { Atom } from "./atoms";
-import { isEmptyObject, wipeDocsUnderPath } from "./util";
-import { EsType, ReduceProps, WriteProps } from "./types";
+import { isEmptyObject, wipeDocsUnderPath } from "../util";
+import { EsType, ReduceProps, WriteProps } from "../type";
 import { QueryFilter, Replica } from "earthstar";
 
 /**

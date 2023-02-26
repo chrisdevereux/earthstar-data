@@ -1,4 +1,4 @@
-import { EsType, boolean, number, object, string, datetime, bigint, set, dict, findByCollectionKey } from '../src'
+import { EsType, boolean, number, object, string, datetime, bigint, set, dict, findByCollectionKey, metadata, docSlug, docPath } from '../src'
 import { expect, test, vitest } from 'vitest'
 import { Crypto, isErr, Replica, ReplicaDriverMemory } from 'earthstar'
 
@@ -233,6 +233,35 @@ test('booleans are read back', async () => {
 
 test('datetimes are read back', async () => {
   await testValuesAreReadBack(datetime, new Date())
+})
+
+test('metadata is read back', async () => {
+  const { replica, author } = await setup()
+  
+  const type = object({
+    '@self': metadata({
+      slug: docSlug,
+      path: docPath,
+      docContent: string
+    })
+  })
+
+  await string.write({
+    replica,
+    author,
+    path: '/objects/1',
+    data: 'hello'
+  })
+  
+  expect(
+    await type.read({ replica, path: '/objects/1' })
+  ).toEqual({
+    '@self': {
+      slug: '1',
+      path: '/objects/1',
+      docContent: 'hello'
+    }
+  })
 })
 
 async function testValuesAreReadBack<R, W>(schema: EsType<R, W>, example: W) {

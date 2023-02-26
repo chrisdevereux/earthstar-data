@@ -1,5 +1,5 @@
 import { DocBase, DocEs5, Replica, ReplicaEvent } from "earthstar"
-import { EsType } from "./types"
+import { EsType } from "./type"
 import { splitPath } from "./util"
 
 export class LiveQuery<T> {

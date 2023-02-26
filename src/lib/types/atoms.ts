@@ -1,5 +1,5 @@
-import { EsType, ReduceProps, WriteProps } from "./types"
-import { requireWriteSuccess } from "./util"
+import { EsType, ReduceProps, WriteProps } from "../type"
+import { requireWriteSuccess } from "../util"
 
 /**
  * Convenience for defining an atomic value type (stored in a single document).
