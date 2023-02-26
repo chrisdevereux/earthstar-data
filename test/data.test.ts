@@ -1,6 +1,7 @@
 import { EsType, boolean, number, object, string, datetime, bigint, set, dict, findByCollectionKey, metadata, docSlug, docPath } from '../src'
 import { expect, test, vitest } from 'vitest'
 import { Crypto, isErr, Replica, ReplicaDriverMemory } from 'earthstar'
+import { blob } from '../src/lib/types/attachment'
 
 test('objects are read back', async () => {
   const ObjectType = object({
@@ -231,8 +232,14 @@ test('booleans are read back', async () => {
   await testValuesAreReadBack(boolean, false)
 })
 
-test('datetimes are read back', async () => {
+test('date-times are read back', async () => {
   await testValuesAreReadBack(datetime, new Date())
+})
+
+test('blobs (and therefore attachments more generally) are read back', async () => {
+  await testValuesAreReadBack(blob, new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' }), {
+    path: '/images/my-image.png'
+  })
 })
 
 test('metadata is read back', async () => {
@@ -264,17 +271,17 @@ test('metadata is read back', async () => {
   })
 })
 
-async function testValuesAreReadBack<R, W>(schema: EsType<R, W>, example: W) {
+async function testValuesAreReadBack<R, W>(schema: EsType<R, W>, example: W, opts?: { path: string }) {
   const { replica, author } = await setup()
   await schema.write({
     replica,
     author,
     data: example,
-    path: '/someObject'
+    path: opts?.path ?? '/someObject'
   })
 
   expect(
-    await schema.read({ path: '/someObject', replica })
+    await schema.read({ path: opts?.path ??'/someObject', replica })
   ).toEqual(example)
 }
 

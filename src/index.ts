@@ -1,4 +1,5 @@
 export * from './lib/types/atoms'
+export * from './lib/types/attachment'
 export * from './lib/types/collection'
 export * from './lib/types/metadata'
 export * from './lib/types/object'
