@@ -1,4 +1,4 @@
-import { DocAttachment, isErr } from "earthstar";
+import type { DocAttachment } from "earthstar";
 import { EsType, ReduceProps, WriteProps } from "../type";
 import { requireWriteSuccess } from "../util";
 
@@ -15,7 +15,7 @@ interface ReadableAttachment {
 export class AttachmentType extends EsType<ReadableAttachment, WritableAttachment> {
   async reduce({ doc, replica }: ReduceProps<ReadableAttachment>): Promise<ReadableAttachment | null> {
     const attachment = await replica.getAttachment(doc);
-    if (isErr(attachment)) {
+    if (attachment instanceof Error) {
       throw attachment;
     }
 
@@ -57,7 +57,7 @@ class BlobAttachmentType extends EsType<Blob> {
   }
 
   async write({ author, replica, path, data }: WriteProps<Blob>): Promise<void> {
-    await this.inner.write({ author, replica, path, data: data && { attachment: data.stream(), metadata: data.type }})
+    await this.inner.write({ author, replica, path, data: data && { attachment: data.stream(), metadata: data.type } })
   }
 }
 

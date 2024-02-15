@@ -1,4 +1,4 @@
-import { AuthorKeypair, DocBase, IngestEvent, Replica } from "earthstar";
+import type { AuthorKeypair, DocBase, IngestEvent, Replica } from "earthstar";
 
 export type NullableValues<T> = { [P in keyof Required<T>]: T[P] | null }
 

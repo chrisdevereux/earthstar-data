@@ -1,4 +1,4 @@
-import { DocBase, DocEs5, Replica, ReplicaEvent } from "earthstar"
+import type { DocBase, DocEs5, Replica, ReplicaEvent } from "earthstar"
 import { EsType } from "./type"
 import { splitPath } from "./util"
 

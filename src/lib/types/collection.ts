@@ -1,7 +1,7 @@
+import type { QueryFilter, Replica } from "earthstar";
 import { Atom } from "./atoms";
 import { isEmptyObject, wipeDocsUnderPath } from "../util";
 import { EsType, ReduceProps, WriteProps } from "../type";
-import { QueryFilter, Replica } from "earthstar";
 
 /**
  * Dictionary type mapping string keys (stored as a url-encoded component in the path) to a common inner value type.
