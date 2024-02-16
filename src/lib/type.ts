@@ -10,6 +10,7 @@ export interface ReadProps {
 export interface ReduceProps<T> {
   replica: Replica
   pathComponents: string[]
+  requestedPath: string
   prev: T | null
   doc: DocEs5
 }
@@ -30,9 +31,10 @@ export abstract class EsType<ReadT = unknown, WriteT = ReadT> {
   abstract write(data: WriteProps<WriteT>): Promise<void>;
 
   async read({ replica, path }: ReadProps) {
-    const contentsPrefix = path + '/'
+    const contentsPrefix = this.getContentPrefix(path)
+
     const [root, contents] = await Promise.all([
-      replica.getLatestDocAtPath(path),
+      replica.getLatestDocAtPath(contentsPrefix.replace(/\/$/, '')),
       replica.queryDocs({
         filter: {
           pathStartsWith: contentsPrefix
@@ -51,7 +53,8 @@ export abstract class EsType<ReadT = unknown, WriteT = ReadT> {
         doc,
         prev: result,
         replica,
-        pathComponents: splitPath(doc.path.substring(path.length))
+        pathComponents: splitPath(doc.path.substring(contentsPrefix.length)),
+        requestedPath: path
       })
     }
 
@@ -59,8 +62,13 @@ export abstract class EsType<ReadT = unknown, WriteT = ReadT> {
   }
 
   async observe({ path, replica }: ReadProps): Promise<LiveQuery<ReadT>> {
-    const initial = await this.read({ path, replica })
-    return new LiveQuery<ReadT>(this, path, replica, initial)
+    const contentPrefix = this.getContentPrefix(path)
+    const initial = await this.read({ path: contentPrefix, replica })
+    return new LiveQuery<ReadT>(this, contentPrefix, path, replica, initial)
+  }
+
+  getContentPrefix(path: string) {
+    return path.endsWith('/') ? path + '/' : path
   }
 }
 

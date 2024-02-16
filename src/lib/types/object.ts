@@ -41,7 +41,7 @@ export class ObjectType<T> extends EsType<T, WrittenProps<T>> {
   }
 
   async reduce({
-    doc, prev, replica, pathComponents: [attrKey = SELF_SIGIL, ...remainingPath]
+    doc, prev, replica, pathComponents: [attrKey = SELF_SIGIL, ...remainingPath], ...rest
   }: ReduceProps<T>): Promise<T | null> {
     const attrSchema = this.shape[attrKey]
 
@@ -53,7 +53,8 @@ export class ObjectType<T> extends EsType<T, WrittenProps<T>> {
       doc,
       prev: (prev as any)?.[attrKey],
       replica,
-      pathComponents: remainingPath
+      pathComponents: remainingPath,
+      ...rest
     })
 
     if (val === null) {

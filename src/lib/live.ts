@@ -5,9 +5,11 @@ import { splitPath } from "./util"
 export class LiveQuery<T> {
   private replicaEvents?: ReadableStreamDefaultReader<ReplicaEvent<DocBase<string>>>
   private observers = new Set<() => void>()
+  private rootPath
 
-  constructor(private schema: EsType<T, unknown>, readonly path: string, private replica: Replica, private value: T | null) {
+  constructor(private schema: EsType<T, unknown>, readonly contentPrefix: string, readonly requestedPath: string, private replica: Replica, private value: T | null) {
     this.run()
+    this.rootPath = contentPrefix.replace(/\/$/, '')
   }
 
   snapshot() {
@@ -71,15 +73,16 @@ export class LiveQuery<T> {
   }
 
   private async handleDoc(doc: DocEs5) {
-    if (doc.path !== this.path && !doc.path.startsWith(this.path + '/')) {
+    if (doc.path !== this.rootPath && !doc.path.startsWith(this.contentPrefix)) {
       return
     }
 
     this.value = await this.schema.reduce({
       doc,
-      pathComponents: splitPath(doc.path.substring(this.path.length)),
+      pathComponents: splitPath(doc.path.substring(this.contentPrefix.length)),
       prev: this.value,
-      replica: this.replica
+      replica: this.replica,
+      requestedPath: this.requestedPath
     })
 
     this.observers.forEach(o => o())

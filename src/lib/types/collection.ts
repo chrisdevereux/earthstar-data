@@ -14,7 +14,7 @@ class CollectionType<T> extends EsType<Record<string, T | undefined>, Record<str
     super()
   }
 
-  async reduce({ replica, doc, prev, pathComponents: [rawKey, ...remainingPath] }: ReduceProps<Record<string, T | undefined>>): Promise<Record<string, T | undefined> | null> {
+  async reduce({ replica, doc, prev, pathComponents: [rawKey, ...remainingPath], ...rest }: ReduceProps<Record<string, T | undefined>>): Promise<Record<string, T | undefined> | null> {
     const key = decodeURIComponent(rawKey)
 
     if (!doc.text) {
@@ -32,7 +32,8 @@ class CollectionType<T> extends EsType<Record<string, T | undefined>, Record<str
         doc,
         prev: prev?.[key] ?? null,
         pathComponents: remainingPath,
-        replica
+        replica,
+        ...rest
       })
 
       if (inner === null) {

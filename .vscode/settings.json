@@ -1,5 +1,4 @@
 {
-  "typescript.preferences.autoImportFileExcludePatterns": [
-    "./dist"
-  ]
+  "typescript.preferences.autoImportFileExcludePatterns": ["./dist"],
+  "vitest.enable": true
 }

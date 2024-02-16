@@ -1,4 +1,4 @@
-import { EsType, boolean, number, object, string, datetime, bigint, set, dict, findByCollectionKey, metadata, docSlug, docPath } from '../src'
+import { EsType, boolean, number, object, string, datetime, bigint, set, dict, findByCollectionKey, metadata, docSlug, docPath, appFormat } from '../src'
 import { expect, test, vitest } from 'vitest'
 import { Crypto, isErr, Replica, ReplicaDriverMemory } from 'earthstar'
 import { blob } from '../src/lib/types/attachment'
@@ -244,7 +244,7 @@ test('blobs (and therefore attachments more generally) are read back', async () 
 
 test('metadata is read back', async () => {
   const { replica, author } = await setup()
-  
+
   const type = object({
     '@self': metadata({
       slug: docSlug,
@@ -259,7 +259,7 @@ test('metadata is read back', async () => {
     path: '/objects/1',
     data: 'hello'
   })
-  
+
   expect(
     await type.read({ replica, path: '/objects/1' })
   ).toEqual({
@@ -268,6 +268,68 @@ test('metadata is read back', async () => {
       path: '/objects/1',
       docContent: 'hello'
     }
+  })
+})
+
+test('schema writes documents to prefixed paths', async () => {
+  const { replica, author } = await setup()
+
+  const AnObject = object({
+    value: string
+  })
+
+  const type = appFormat(AnObject, {
+    prefix: '/objects/',
+    format: {
+      namespace: 'my-app',
+      major: 1,
+      minor: 0
+    }
+  })
+
+  await type.write({
+    replica,
+    author,
+    path: '1',
+    data: {
+      value: 'hello'
+    }
+  })
+
+  expect(
+    await AnObject.read({ replica, path: '/my-app/1.0/objects/1' })
+  ).toEqual({
+    value: 'hello'
+  })
+})
+
+test('schema reads documents from prefixed paths that match schema version', async () => {
+  const { replica, author } = await setup()
+
+  const AnObject = object({
+    value: string
+  })
+
+  const type = appFormat(dict(AnObject), {
+    prefix: '/objects/',
+    format: {
+      namespace: 'my-app',
+      major: 2,
+      minor: 1
+    }
+  })
+
+  await Promise.all([
+    AnObject.write({ path: '/my-app/1.0/objects/1', data: { value: 'a' }, replica, author }),
+    AnObject.write({ path: '/my-app/2.0/objects/2', data: { value: 'b' }, replica, author }),
+    AnObject.write({ path: '/my-app/2.3/objects/3', data: { value: 'c' }, replica, author }),
+    AnObject.write({ path: '/my-app/3.0/objects/4', data: { value: 'd' }, replica, author }),
+  ])
+
+  expect(
+    await type.read({ replica, path: '/' })
+  ).toEqual({
+    2: { value: 'b' }
   })
 })
 
@@ -281,7 +343,7 @@ async function testValuesAreReadBack<R, W>(schema: EsType<R, W>, example: W, opt
   })
 
   expect(
-    await schema.read({ path: opts?.path ??'/someObject', replica })
+    await schema.read({ path: opts?.path ?? '/someObject', replica })
   ).toEqual(example)
 }
 
